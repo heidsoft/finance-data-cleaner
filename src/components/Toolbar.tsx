@@ -17,8 +17,6 @@ interface ToolbarProps {
   canMerge: boolean
   isMerged: boolean
   headers: string[]
-  searchText: string
-  onSearchChange: (text: string) => void
   canUndo: boolean
 }
 
@@ -38,8 +36,6 @@ export default function Toolbar({
   canMerge,
   isMerged,
   headers,
-  searchText,
-  onSearchChange,
   canUndo,
 }: ToolbarProps) {
   const [showColPicker, setShowColPicker] = useState(false)
