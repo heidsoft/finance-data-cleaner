@@ -5,10 +5,8 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && electron-builder",
-    "preview": "vite preview",
-    "electron:dev": "concurrently \"vite\" \"electron .\"",
-    "electron:build": "npm run build"
+    "build": "vite build && electron-builder",
+    "preview": "vite preview"
   },
   "keywords": ["electron", "react", "data-cleaner", "finance"],
   "author": "",
@@ -41,7 +39,7 @@
       "output": "release"
     },
     "mac": {
-      "target": ["dmg"],
+      "target": "dir",
       "category": "public.app-category.productivity"
     },
     "files": [
