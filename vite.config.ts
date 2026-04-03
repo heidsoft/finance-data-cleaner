@@ -43,5 +43,10 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist'
-  }
+  },
+  define: {
+    // Ensure Buffer is available globally in renderer
+    'process.env': {},
+    'global': 'globalThis',
+  },
 })

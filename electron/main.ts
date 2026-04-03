@@ -35,6 +35,7 @@ function createWindow() {
   } else {
     console.log('Loading production build')
     win.loadFile(path.join(__dirname, '../dist/index.html'))
+    win.webContents.openDevTools()
   }
 
   win.on('closed', () => {
@@ -60,7 +61,6 @@ app.on('window-all-closed', () => {
   }
 })
 
-// IPC: 打开文件对话框
 ipcMain.handle('dialog:openFile', async () => {
   const result = await dialog.showOpenDialog({
     properties: ['openFile', 'multiSelections'],
@@ -72,7 +72,6 @@ ipcMain.handle('dialog:openFile', async () => {
   return result
 })
 
-// IPC: 保存文件对话框
 ipcMain.handle('dialog:saveFile', async (_, defaultName: string) => {
   const result = await dialog.showSaveDialog({
     defaultPath: defaultName,
@@ -84,7 +83,6 @@ ipcMain.handle('dialog:saveFile', async (_, defaultName: string) => {
   return result
 })
 
-// IPC: 读取文件内容（主进程读取，传回 Buffer）
 ipcMain.handle('file:read', async (_, filePath: string) => {
   try {
     const buffer = fs.readFileSync(filePath)
@@ -94,10 +92,9 @@ ipcMain.handle('file:read', async (_, filePath: string) => {
   }
 })
 
-// IPC: 写入文件内容
-ipcMain.handle('file:write', async (_, filePath: string, data: string | Buffer) => {
+ipcMain.handle('file:write', async (_, filePath: string, data: string | ArrayBuffer) => {
   try {
-    fs.writeFileSync(filePath, data)
+    fs.writeFileSync(filePath, Buffer.from(data))
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }

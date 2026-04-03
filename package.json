@@ -8,14 +8,19 @@
     "build": "vite build && electron-builder",
     "preview": "vite preview"
   },
-  "keywords": ["electron", "react", "data-cleaner", "finance"],
+  "keywords": [
+    "electron",
+    "react",
+    "data-cleaner",
+    "finance"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "xlsx": "^0.18.5",
-    "lucide-react": "^0.294.0"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
@@ -30,7 +35,8 @@
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
     "vite-plugin-electron": "^0.15.5",
-    "vite-plugin-electron-renderer": "^0.14.5"
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "vite-plugin-node-polyfills": "^0.26.0"
   },
   "build": {
     "appId": "com.finance.datacleaner",
