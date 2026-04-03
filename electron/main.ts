@@ -1,10 +1,9 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import path from 'path'
+import fs from 'fs'
 
-// Enable logging
 console.log('App starting...')
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error)
 })
@@ -29,7 +28,6 @@ function createWindow() {
     title: '财务数据清洗工具',
   })
 
-  // Load the app
   if (process.env.VITE_DEV_SERVER_URL) {
     console.log('Loading dev server:', process.env.VITE_DEV_SERVER_URL)
     win.loadURL(process.env.VITE_DEV_SERVER_URL)
@@ -62,7 +60,7 @@ app.on('window-all-closed', () => {
   }
 })
 
-// IPC handlers for file operations
+// IPC: 打开文件对话框
 ipcMain.handle('dialog:openFile', async () => {
   const result = await dialog.showOpenDialog({
     properties: ['openFile', 'multiSelections'],
@@ -74,6 +72,7 @@ ipcMain.handle('dialog:openFile', async () => {
   return result
 })
 
+// IPC: 保存文件对话框
 ipcMain.handle('dialog:saveFile', async (_, defaultName: string) => {
   const result = await dialog.showSaveDialog({
     defaultPath: defaultName,
@@ -83,4 +82,24 @@ ipcMain.handle('dialog:saveFile', async (_, defaultName: string) => {
     ]
   })
   return result
+})
+
+// IPC: 读取文件内容（主进程读取，传回 Buffer）
+ipcMain.handle('file:read', async (_, filePath: string) => {
+  try {
+    const buffer = fs.readFileSync(filePath)
+    return { success: true, buffer: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+})
+
+// IPC: 写入文件内容
+ipcMain.handle('file:write', async (_, filePath: string, data: string | Buffer) => {
+  try {
+    fs.writeFileSync(filePath, data)
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
 })

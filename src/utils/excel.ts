@@ -1,5 +1,4 @@
 import * as XLSX from 'xlsx'
-import fs from 'fs'
 import path from 'path'
 
 export interface FileData {
@@ -11,14 +10,19 @@ export interface FileData {
 
 export async function processFile(filePath: string): Promise<FileData | null> {
   try {
-    const buffer = fs.readFileSync(filePath)
-    const workbook = XLSX.read(buffer, { type: 'buffer' })
+    const result = await window.electronAPI.readFile(filePath)
+    if (!result.success || !result.buffer) {
+      console.error('读取文件失败:', result.error)
+      return null
+    }
+    
+    const workbook = XLSX.read(result.buffer, { type: 'array' })
     
     // Get first sheet
     const sheetName = workbook.SheetNames[0]
     const worksheet = workbook.Sheets[sheetName]
     
-    // Convert to JSON (array of arrays)
+    // Convert to array of arrays
     const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][]
     
     if (jsonData.length === 0) {
@@ -45,11 +49,13 @@ export async function exportToExcel(data: any[][], filePath: string): Promise<vo
   const worksheet = XLSX.utils.aoa_to_sheet(data)
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, worksheet, '数据')
-  XLSX.writeFile(workbook, filePath)
+  const output = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+  await window.electronAPI.writeFile(filePath, new Uint8Array(output))
 }
 
 export async function exportToCSV(data: any[][], filePath: string): Promise<void> {
   const worksheet = XLSX.utils.aoa_to_sheet(data)
   const csv = XLSX.utils.sheet_to_csv(worksheet)
-  fs.writeFileSync(filePath, '\ufeff' + csv, 'utf-8') // BOM for Excel
+  // Add BOM for Excel UTF-8 compatibility
+  await window.electronAPI.writeFile(filePath, '\ufeff' + csv)
 }
