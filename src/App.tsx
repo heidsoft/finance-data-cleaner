@@ -4,6 +4,7 @@ import FileSidebar from "./components/FileSidebar";
 import DataTable from "./components/DataTable";
 import StatusBar from "./components/StatusBar";
 import Toast, { ToastMessage } from "./components/Toast";
+import ConfirmDialog from "./components/ConfirmDialog";
 import MonthlySummary from "./components/MonthlySummary";
 import {
   FileData,
@@ -84,6 +85,15 @@ function App() {
 
   // Toast 通知
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmLabel?: string;
+    confirmClassName?: string;
+  } | null>(null);
 
   const showToast = useCallback((message: string, type: ToastMessage["type"] = "success") => {
     const id = crypto.randomUUID();
@@ -417,6 +427,142 @@ function App() {
       saveHistory(newData, newHeaders);
     },
     [currentData, selectedFileIndex, isMerged, files, saveHistory],
+  );
+
+  // ========== Confirm-wrapped toolbar handlers ==========
+
+  const handleDeduplicateWithConfirm = useCallback(
+    (columnIndex: number) => {
+      if (currentData.length === 0) return;
+      const dataRows = currentData.slice(1);
+      const seen = new Set();
+      let removed = 0;
+      dataRows.forEach((row) => {
+        const key = columnIndex >= 0 ? row[columnIndex] : JSON.stringify(row);
+        if (seen.has(key)) {
+          removed++;
+        } else {
+          seen.add(key);
+        }
+      });
+      setConfirmDialog({
+        title: "确认去重",
+        message:
+          removed > 0
+            ? `将删除 ${removed} 行重复数据，保留 ${dataRows.length - removed} 行。`
+            : "没有发现重复行，无需去重。",
+        onConfirm: () => {
+          handleDeduplicate(columnIndex);
+          setConfirmDialog(null);
+          if (removed > 0) {
+            showToast(`去重完成：删除了 ${removed} 行`, "success");
+          }
+        },
+        confirmLabel: removed > 0 ? "确认去重" : "好的",
+        confirmClassName: "bg-orange-500 hover:bg-orange-600",
+      });
+    },
+    [currentData, handleDeduplicate],
+  );
+
+  const handleCleanEmptyWithConfirm = useCallback(() => {
+    if (currentData.length === 0) return;
+    const dataRows = currentData.slice(1);
+    const nonEmptyRows = dataRows.filter((row) =>
+      row.some(
+        (cell) =>
+          cell !== null && cell !== undefined && String(cell).trim() !== "",
+      ),
+    );
+    const removed = dataRows.length - nonEmptyRows.length;
+    setConfirmDialog({
+      title: "确认清空",
+      message:
+        removed > 0
+          ? `将删除 ${removed} 行空行/空列，保留 ${nonEmptyRows.length} 行。`
+          : "没有发现空行空列，无需清空。",
+      onConfirm: () => {
+        handleCleanEmpty();
+        setConfirmDialog(null);
+        if (removed > 0) {
+          showToast(`清空完成：删除了 ${removed} 行空行`, "success");
+        }
+      },
+      confirmLabel: removed > 0 ? "确认清空" : "好的",
+      confirmClassName: "bg-yellow-500 hover:bg-yellow-600",
+    });
+  }, [currentData, handleCleanEmpty]);
+
+  const handleTrimWhitespaceWithConfirm = useCallback(() => {
+    if (currentData.length === 0) return;
+    setConfirmDialog({
+      title: "确认 Trim",
+      message: "去除所有单元格的首尾空格。",
+      onConfirm: () => {
+        handleTrimWhitespace();
+        setConfirmDialog(null);
+        showToast("Trim 完成", "success");
+      },
+      confirmClassName: "bg-gray-500 hover:bg-gray-600",
+    });
+  }, [handleTrimWhitespace]);
+
+  const handleStandardizeDateWithConfirm = useCallback(() => {
+    if (currentData.length === 0) return;
+    setConfirmDialog({
+      title: "确认日期格式规范化",
+      message: "将各种日期格式统一为 YYYY-MM-DD。",
+      onConfirm: () => {
+        handleStandardizeDate();
+        setConfirmDialog(null);
+        showToast("日期格式规范化完成", "success");
+      },
+      confirmClassName: "bg-indigo-500 hover:bg-indigo-600",
+    });
+  }, [handleStandardizeDate]);
+
+  const handleFillEmptyWithConfirm = useCallback(
+    (value: string) => {
+      if (currentData.length === 0) return;
+      setConfirmDialog({
+        title: "确认填充空值",
+        message: `将使用 "${value}" 填充所有空单元格。`,
+        onConfirm: () => {
+          handleFillEmpty(value);
+          setConfirmDialog(null);
+          showToast(`已使用 "${value}" 填充空值`, "success");
+        },
+        confirmClassName: "bg-teal-500 hover:bg-teal-600",
+      });
+    },
+    [handleFillEmpty],
+  );
+
+  const handleSelectColumnsWithConfirm = useCallback(
+    (selectedCols: number[]) => {
+      if (currentData.length === 0) return;
+      const headers = currentData[0];
+      const currentColCount = headers.length;
+      const newColCount = selectedCols.length;
+      const removed = currentColCount - newColCount;
+      setConfirmDialog({
+        title: "确认选列",
+        message:
+          removed > 0
+            ? `将保留 ${newColCount} 列，删除 ${removed} 列。`
+            : `将保留全部 ${newColCount} 列。`,
+        onConfirm: () => {
+          handleSelectColumns(selectedCols);
+          setConfirmDialog(null);
+          if (removed > 0) {
+            showToast(`选列完成：保留 ${newColCount} 列`, "success");
+          }
+        },
+        confirmLabel: removed > 0 ? "确认选列" : "好的",
+        confirmClassName: "bg-pink-500 hover:bg-pink-600",
+      });
+    },
+    [currentData, handleSelectColumns],
   );
 
   // SKU映射
@@ -1552,14 +1698,14 @@ function App() {
             onImport={handleImportOrders}
             onExport={handleExport}
             onMerge={handleMerge}
-            onDeduplicate={handleDeduplicate}
-            onCleanEmpty={handleCleanEmpty}
-            onTrimWhitespace={handleTrimWhitespace}
+            onDeduplicate={handleDeduplicateWithConfirm}
+            onCleanEmpty={handleCleanEmptyWithConfirm}
+            onTrimWhitespace={handleTrimWhitespaceWithConfirm}
             onClear={handleClear}
             onUndo={handleUndo}
-            onStandardizeDate={handleStandardizeDate}
-            onFillEmpty={handleFillEmpty}
-            onSelectColumns={handleSelectColumns}
+            onStandardizeDate={handleStandardizeDateWithConfirm}
+            onFillEmpty={handleFillEmptyWithConfirm}
+            onSelectColumns={handleSelectColumnsWithConfirm}
             hasData={currentData.length > 0}
             canMerge={files.length >= 2}
             headers={currentHeaders}
@@ -1657,6 +1803,15 @@ function App() {
         </div>
       )}
       <Toast toasts={toasts} onDismiss={dismissToast} />
+      <ConfirmDialog
+        open={confirmDialog !== null}
+        title={confirmDialog?.title || ""}
+        message={confirmDialog?.message || ""}
+        confirmLabel={confirmDialog?.confirmLabel}
+        confirmClassName={confirmDialog?.confirmClassName}
+        onConfirm={confirmDialog?.onConfirm || (() => {})}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </div>
   );
 }

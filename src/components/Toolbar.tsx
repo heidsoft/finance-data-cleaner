@@ -16,7 +16,7 @@ interface ToolbarProps {
   onImport: () => void;
   onExport: (format: "xlsx" | "csv") => void;
   onMerge: () => void;
-  onDeduplicate: (columnIndex?: number) => void;
+  onDeduplicate: (columnIndex: number) => void;
   onCleanEmpty: () => void;
   onTrimWhitespace: () => void;
   onClear: () => void;
@@ -112,13 +112,7 @@ export default function Toolbar({
         {/* 去重 */}
         <div className="relative">
           <button
-            onClick={() => {
-              if (dedupCol === -1) {
-                onDeduplicate();
-              } else {
-                onDeduplicate(dedupCol);
-              }
-            }}
+            onClick={() => onDeduplicate(dedupCol)}
             disabled={!hasData}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm disabled:opacity-40"
           >
