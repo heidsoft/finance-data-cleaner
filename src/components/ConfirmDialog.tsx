@@ -9,6 +9,7 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   confirmClassName?: string;
+  disabled?: boolean;
 }
 
 export default function ConfirmDialog({
@@ -20,6 +21,7 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
   confirmClassName = "bg-blue-600 hover:bg-blue-700",
+  disabled = false,
 }: ConfirmDialogProps) {
   if (!open) return null;
 
@@ -36,15 +38,20 @@ export default function ConfirmDialog({
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+            disabled={disabled}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm disabled:opacity-50"
           >
             {cancelLabel}
           </button>
           <button
-            onClick={onConfirm}
+            onClick={() => {
+              if (disabled) return;
+              onConfirm();
+            }}
+            disabled={disabled}
             className={`px-4 py-2 text-white rounded-lg text-sm ${confirmClassName}`}
           >
-            {confirmLabel}
+            {disabled ? "处理中..." : confirmLabel}
           </button>
         </div>
       </div>
