@@ -46,7 +46,8 @@
     },
     "mac": {
       "target": "dir",
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "sign": false
     },
     "files": [
       "dist/**/*",

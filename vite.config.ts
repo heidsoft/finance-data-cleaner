@@ -2,11 +2,17 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import electron from 'vite-plugin-electron'
 import renderer from 'vite-plugin-electron-renderer'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import path from 'path'
 
 export default defineConfig({
   plugins: [
     react(),
+    nodePolyfills({
+      // Enable polyfills for xlsx
+      globals: { Buffer: true, process: true },
+      include: ['buffer'],
+    }),
     electron([
       {
         entry: 'electron/main.ts',
@@ -43,10 +49,5 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist'
-  },
-  define: {
-    // Ensure Buffer is available globally in renderer
-    'process.env': {},
-    'global': 'globalThis',
   },
 })
