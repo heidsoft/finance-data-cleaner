@@ -14,7 +14,7 @@ import {
 
 interface ToolbarProps {
   onImport: () => void;
-  onExport: (format: "xlsx" | "csv") => void;
+  onShowExportPanel: () => void;
   onMerge: () => void;
   onDeduplicate: (columnIndex: number) => void;
   onCleanEmpty: () => void;
@@ -33,7 +33,7 @@ interface ToolbarProps {
 
 export default function Toolbar({
   onImport,
-  onExport,
+  onShowExportPanel,
   onMerge,
   onDeduplicate,
   onCleanEmpty,
@@ -80,19 +80,12 @@ export default function Toolbar({
 
         {/* 导出 */}
         <button
-          onClick={() => onExport("xlsx")}
+          onClick={onShowExportPanel}
           disabled={!hasData || !desktopReady}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm disabled:opacity-40"
         >
           <Download size={15} />
-          <span>Excel</span>
-        </button>
-        <button
-          onClick={() => onExport("csv")}
-          disabled={!hasData || !desktopReady}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm disabled:opacity-40"
-        >
-          <span>CSV</span>
+          <span>导出</span>
         </button>
 
         <div className="h-5 w-px bg-gray-300" />

@@ -6,6 +6,7 @@ import StatusBar from "./components/StatusBar";
 import Toast, { ToastMessage } from "./components/Toast";
 import ConfirmDialog from "./components/ConfirmDialog";
 import MonthlySummary from "./components/MonthlySummary";
+import ExportPanel from "./components/ExportPanel";
 import {
   FileData,
   processFile,
@@ -95,6 +96,8 @@ function App() {
     confirmClassName?: string;
     disabled?: boolean;
   } | null>(null);
+
+  const [showExportPanel, setShowExportPanel] = useState(false);
 
   const showToast = useCallback((message: string, type: ToastMessage["type"] = "success") => {
     const id = crypto.randomUUID();
@@ -924,23 +927,28 @@ function App() {
     }
   }, [rebateResult, rebateBrand, reportError]);
 
-  const handleExport = useCallback(
-    async (format: "xlsx" | "csv") => {
-      if (currentData.length === 0) return;
-      try {
-        const defaultName = `清洗后数据.${format}`;
-        const result = await saveDataFile(defaultName);
-        if (!result.canceled && result.filePath) {
-          if (format === "xlsx")
-            await exportToExcel(currentData, result.filePath);
-          else await exportToCSV(currentData, result.filePath);
+  const handleExportWithPanel = useCallback(() => {
+    if (currentData.length === 0) return;
+    setShowExportPanel(true);
+  }, [currentData]);
+
+  const handleDoExport = useCallback(async (format: "xlsx" | "csv", encoding?: "utf-8" | "gbk", delimiter?: string) => {
+    if (currentData.length === 0) return;
+    setShowExportPanel(false);
+    try {
+      const result = await saveDataFile(`清洗后数据.${format === "csv" ? "csv" : "xlsx"}`);
+      if (!result.canceled && result.filePath) {
+        if (format === "csv") {
+          await exportToCSV(currentData, result.filePath, encoding, delimiter);
+        } else {
+          await exportToExcel(currentData, result.filePath);
         }
-      } catch (error) {
-        reportError("导出数据", error);
+        showToast(`导出成功`, "success");
       }
-    },
-    [currentData, reportError],
-  );
+    } catch (error) {
+      reportError("导出数据", error);
+    }
+  }, [currentData, reportError]);
 
   const handleClear = useCallback(() => {
     setFiles([]);
@@ -1703,7 +1711,7 @@ function App() {
         <>
           <Toolbar
             onImport={handleImportOrders}
-            onExport={handleExport}
+            onShowExportPanel={handleExportWithPanel}
             onMerge={handleMerge}
             onDeduplicate={handleDeduplicateWithConfirm}
             onCleanEmpty={handleCleanEmptyWithConfirm}
@@ -1819,6 +1827,11 @@ function App() {
         disabled={confirmDialog?.disabled}
         onConfirm={confirmDialog?.onConfirm || (() => {})}
         onCancel={() => setConfirmDialog(null)}
+      />
+      <ExportPanel
+        open={showExportPanel}
+        onExport={handleDoExport}
+        onCancel={() => setShowExportPanel(false)}
       />
     </div>
   );

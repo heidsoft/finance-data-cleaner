@@ -49,8 +49,23 @@ export async function exportToExcel(data: any[][], filePath: string): Promise<vo
   await writeLocalFile(filePath, output.buffer)
 }
 
-export async function exportToCSV(data: any[][], filePath: string): Promise<void> {
-  const worksheet = XLSX.utils.aoa_to_sheet(data)
-  const csv = XLSX.utils.sheet_to_csv(worksheet)
-  await writeLocalFile(filePath, '\ufeff' + csv)
+export async function exportToCSV(
+  data: any[][],
+  filePath: string,
+  encoding: "utf-8" | "gbk" = "utf-8",
+  delimiter: string = ","
+): Promise<void> {
+  const csv = data.map(row =>
+    row.map(cell => {
+      const str = cell === null || cell === undefined ? "" : String(cell);
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    }).join(delimiter)
+  ).join("\n");
+
+  const bom = encoding === "utf-8" ? "\ufeff" : "";
+  const buffer = new TextEncoder().encode(bom + csv);
+  await writeLocalFile(filePath, buffer.buffer);
 }
