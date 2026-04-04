@@ -3,14 +3,15 @@ import { Download } from "lucide-react";
 
 interface ExportPanelProps {
   open: boolean;
-  onExport: (format: "xlsx" | "csv", encoding?: "utf-8" | "gbk", delimiter?: string) => void;
+  onExport: (format: "xlsx" | "csv", encoding?: "utf-8", delimiter?: string) => void;
   onCancel: () => void;
 }
 
 export default function ExportPanel({ open, onExport, onCancel }: ExportPanelProps) {
   const [format, setFormat] = useState<"xlsx" | "csv">("xlsx");
-  const [encoding, setEncoding] = useState<"utf-8" | "gbk">("utf-8");
-  const [delimiter, setDelimiter] = useState<"," | "\t">(",");
+  const [encoding, setEncoding] = useState<"utf-8">("utf-8");
+  // Store delimiter as descriptive string, convert to actual char when exporting
+  const [delimiter, setDelimiter] = useState<"," | "tab">(",");
 
   if (!open) return null;
 
@@ -42,11 +43,10 @@ export default function ExportPanel({ open, onExport, onCancel }: ExportPanelPro
               <label className="text-sm text-gray-600 mb-2 block">编码</label>
               <select
                 value={encoding}
-                onChange={(e) => setEncoding(e.target.value as "utf-8" | "gbk")}
+                onChange={(e) => setEncoding(e.target.value as "utf-8")}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
               >
-                <option value="utf-8">UTF-8（推荐）</option>
-                <option value="gbk">GBK（兼容 Excel）</option>
+                <option value="utf-8">UTF-8</option>
               </select>
             </div>
             <div className="mb-4">
@@ -57,7 +57,7 @@ export default function ExportPanel({ open, onExport, onCancel }: ExportPanelPro
                   <span className="text-sm">逗号 ,</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" value="\t" checked={delimiter === "\t"} onChange={() => setDelimiter("\t")} />
+                  <input type="radio" value="tab" checked={delimiter === "tab"} onChange={() => setDelimiter("tab")} />
                   <span className="text-sm">制表符 Tab</span>
                 </label>
               </div>
@@ -70,7 +70,11 @@ export default function ExportPanel({ open, onExport, onCancel }: ExportPanelPro
             取消
           </button>
           <button
-            onClick={() => onExport(format, encoding, delimiter)}
+            onClick={() => {
+              // Convert delimiter string to actual character
+              const actualDelimiter = delimiter === "tab" ? "\t" : ",";
+              onExport(format, encoding, actualDelimiter);
+            }}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
           >
             导出

@@ -52,7 +52,7 @@ export async function exportToExcel(data: any[][], filePath: string): Promise<vo
 export async function exportToCSV(
   data: any[][],
   filePath: string,
-  encoding: "utf-8" | "gbk" = "utf-8",
+  _encoding: "utf-8" = "utf-8",
   delimiter: string = ","
 ): Promise<void> {
   const csv = data.map(row =>
@@ -65,7 +65,8 @@ export async function exportToCSV(
     }).join(delimiter)
   ).join("\n");
 
-  const bom = encoding === "utf-8" ? "\ufeff" : "";
+  // Always use UTF-8 with BOM for Excel compatibility
+  const bom = "\ufeff";
   const buffer = new TextEncoder().encode(bom + csv);
   await writeLocalFile(filePath, buffer.buffer);
 }
