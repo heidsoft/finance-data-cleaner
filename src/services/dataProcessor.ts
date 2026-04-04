@@ -136,3 +136,73 @@ export function selectColumns(data: any[][], selectedCols: number[]): { headers:
     data: [newHeaders, ...newRows]
   }
 }
+
+export interface MergeColumnInfo {
+  columnName: string;
+  sources: string[];
+  sourceIndices: number[];
+}
+
+export interface MergePreviewResult {
+  unifiedHeaders: string[];
+  columnInfo: MergeColumnInfo[];
+  totalRows: number;
+  fileStats: { name: string; rows: number; columns: number }[];
+}
+
+export function smartMergeHeaders(files: { headers: string[]; data: any[][]; name: string }[]): MergePreviewResult {
+  const columnMap = new Map<string, { sources: string[]; sourceIndices: number[] }>();
+
+  files.forEach((file, fileIdx) => {
+    file.headers.forEach((col, colIdx) => {
+      const key = col.trim();
+      if (!columnMap.has(key)) {
+        columnMap.set(key, { sources: [], sourceIndices: [] });
+      }
+      const entry = columnMap.get(key)!;
+      entry.sources.push(file.name);
+      entry.sourceIndices.push(colIdx);
+    });
+  });
+
+  const unifiedHeaders = Array.from(columnMap.keys());
+  const columnInfo: MergeColumnInfo[] = unifiedHeaders.map(name => {
+    const entry = columnMap.get(name)!;
+    return {
+      columnName: name,
+      sources: entry.sources,
+      sourceIndices: entry.sourceIndices,
+    };
+  });
+
+  const totalRows = files.reduce((sum, f) => sum + f.data.length - 1, 0);
+  const fileStats = files.map(f => ({
+    name: f.name,
+    rows: f.data.length - 1,
+    columns: f.headers.length,
+  }));
+
+  return { unifiedHeaders, columnInfo, totalRows, fileStats };
+}
+
+export function executeSmartMerge(
+  files: { headers: string[]; data: any[][]; name: string }[],
+  columnInfo: MergeColumnInfo[]
+): any[][] {
+  if (files.length === 0) return [];
+
+  const merged: any[][] = [columnInfo.map(c => c.columnName)];
+
+  files.forEach((file, _fileIdx) => {
+    const fileRows = file.data.slice(1);
+    fileRows.forEach(row => {
+      const newRow = columnInfo.map(col => {
+        const sourceIdx = col.sourceIndices[col.sources.indexOf(file.name)];
+        return sourceIdx !== undefined ? row[sourceIdx] : "";
+      });
+      merged.push(newRow);
+    });
+  });
+
+  return merged;
+}

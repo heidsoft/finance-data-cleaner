@@ -7,6 +7,7 @@ import Toast, { ToastMessage } from "./components/Toast";
 import ConfirmDialog from "./components/ConfirmDialog";
 import MonthlySummary from "./components/MonthlySummary";
 import ExportPanel from "./components/ExportPanel";
+import MergePreview from "./components/MergePreview";
 import {
   FileData,
   processFile,
@@ -14,6 +15,11 @@ import {
   exportToCSV,
 } from "./utils/excel";
 import { hasElectronAPI, openDataFiles, saveDataFile } from "./utils/desktop";
+import {
+  smartMergeHeaders,
+  executeSmartMerge,
+  MergeColumnInfo,
+} from "./services/dataProcessor";
 
 interface HistoryState {
   data: any[][];
@@ -98,6 +104,12 @@ function App() {
   } | null>(null);
 
   const [showExportPanel, setShowExportPanel] = useState(false);
+
+  const [mergePreview, setMergePreview] = useState<{
+    unifiedHeaders: string[];
+    columnInfo: MergeColumnInfo[];
+    totalRows: number;
+  } | null>(null);
 
   const showToast = useCallback((message: string, type: ToastMessage["type"] = "success") => {
     const id = crypto.randomUUID();
@@ -216,18 +228,24 @@ function App() {
     [selectedFileIndex],
   );
 
-  const handleMerge = useCallback(() => {
+  const handleMergeWithPreview = useCallback(() => {
     if (files.length < 2) return;
-    const mergedHeaders = files[0].headers;
-    const merged: any[][] = [mergedHeaders];
-    files.forEach((file) => merged.push(...file.data.slice(1)));
+    const { unifiedHeaders, columnInfo, totalRows } = smartMergeHeaders(files);
+    setMergePreview({ unifiedHeaders, columnInfo, totalRows });
+  }, [files]);
+
+  const handleConfirmMerge = useCallback(() => {
+    if (!mergePreview || files.length < 2) return;
+    const merged = executeSmartMerge(files, mergePreview.columnInfo);
     setMergedData(merged);
-    setCurrentHeaders(mergedHeaders);
+    setCurrentHeaders(mergePreview.unifiedHeaders);
     setCurrentData(merged);
     setIsMerged(true);
-    saveHistory(merged, mergedHeaders);
+    saveHistory(merged, mergePreview.unifiedHeaders);
     computeStats(files);
-  }, [files, saveHistory]);
+    setMergePreview(null);
+    showToast(`合并完成：${files.length} 个文件，${mergePreview.totalRows} 行数据`, "success");
+  }, [mergePreview, files, saveHistory, computeStats, showToast]);
 
   const handleDeduplicate = useCallback(
     (columnIndex?: number) => {
@@ -1712,7 +1730,7 @@ function App() {
           <Toolbar
             onImport={handleImportOrders}
             onShowExportPanel={handleExportWithPanel}
-            onMerge={handleMerge}
+            onMerge={handleMergeWithPreview}
             onDeduplicate={handleDeduplicateWithConfirm}
             onCleanEmpty={handleCleanEmptyWithConfirm}
             onTrimWhitespace={handleTrimWhitespaceWithConfirm}
@@ -1833,6 +1851,16 @@ function App() {
         onExport={handleDoExport}
         onCancel={() => setShowExportPanel(false)}
       />
+      {mergePreview && (
+        <MergePreview
+          files={files}
+          unifiedHeaders={mergePreview.unifiedHeaders}
+          columnInfo={mergePreview.columnInfo}
+          totalRows={mergePreview.totalRows}
+          onConfirm={handleConfirmMerge}
+          onCancel={() => setMergePreview(null)}
+        />
+      )}
     </div>
   );
 }
