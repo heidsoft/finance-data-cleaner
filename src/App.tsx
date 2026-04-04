@@ -594,6 +594,29 @@ function App() {
     [currentData, handleSelectColumns],
   );
 
+  const handleOneClickCleanWithConfirm = useCallback(() => {
+    if (currentData.length === 0) return;
+    const dataRows = currentData.slice(1);
+    const nonEmptyRows = dataRows.filter(row =>
+      row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '')
+    );
+    const removedRows = dataRows.length - nonEmptyRows.length;
+
+    setConfirmDialog({
+      title: "确认一键清洗",
+      message: `将执行以下操作：\n1. 去除所有单元格的前后空格\n2. 删除 ${removedRows} 行空行\n3. 将日期格式统一为 YYYY-MM-DD`,
+      onConfirm: () => {
+        setConfirmDialog(prev => prev ? { ...prev, disabled: true } : null);
+        handleTrimWhitespace();
+        handleCleanEmpty();
+        handleStandardizeDate();
+        setConfirmDialog(null);
+        showToast("一键清洗完成", "success");
+      },
+      confirmClassName: "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600",
+    });
+  }, [currentData, handleTrimWhitespace, handleCleanEmpty, handleStandardizeDate]);
+
   // SKU映射
   const handleImportMapping = useCallback(async () => {
     try {
@@ -1740,6 +1763,7 @@ function App() {
             onStandardizeDate={handleStandardizeDateWithConfirm}
             onFillEmpty={handleFillEmptyWithConfirm}
             onSelectColumns={handleSelectColumnsWithConfirm}
+            onOneClickClean={handleOneClickCleanWithConfirm}
             hasData={currentData.length > 0}
             canMerge={files.length >= 2}
             headers={currentHeaders}

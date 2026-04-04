@@ -10,6 +10,7 @@ import {
   Calendar,
   Columns,
   Pill,
+  Wand2,
 } from "lucide-react";
 
 interface ToolbarProps {
@@ -24,6 +25,7 @@ interface ToolbarProps {
   onStandardizeDate: () => void;
   onFillEmpty: (value: string) => void;
   onSelectColumns: (selectedCols: number[]) => void;
+  onOneClickClean: () => void;
   hasData: boolean;
   canMerge: boolean;
   headers: string[];
@@ -43,6 +45,7 @@ export default function Toolbar({
   onStandardizeDate,
   onFillEmpty,
   onSelectColumns,
+  onOneClickClean,
   hasData,
   canMerge,
   headers,
@@ -180,6 +183,17 @@ export default function Toolbar({
         >
           <Columns size={15} />
           <span>选列</span>
+        </button>
+
+        {/* 一键清洗 */}
+        <button
+          onClick={onOneClickClean}
+          disabled={!hasData}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-colors text-sm disabled:opacity-40"
+          title="去空格 + 清空空行空列 + 日期标准化"
+        >
+          <Wand2 size={15} />
+          <span>一键清洗</span>
         </button>
 
         <div className="h-5 w-px bg-gray-300" />
