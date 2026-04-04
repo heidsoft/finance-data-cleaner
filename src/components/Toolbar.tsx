@@ -1,23 +1,34 @@
-import { useState } from 'react'
-import { Upload, Download, Merge, Trash2, Scissors, Eraser, Undo2, Calendar, Columns, Pill } from 'lucide-react'
+import { useState } from "react";
+import {
+  Upload,
+  Download,
+  Merge,
+  Trash2,
+  Scissors,
+  Eraser,
+  Undo2,
+  Calendar,
+  Columns,
+  Pill,
+} from "lucide-react";
 
 interface ToolbarProps {
-  onImport: () => void
-  onExport: (format: 'xlsx' | 'csv') => void
-  onMerge: () => void
-  onDeduplicate: (columnIndex?: number) => void
-  onCleanEmpty: () => void
-  onTrimWhitespace: () => void
-  onClear: () => void
-  onUndo: () => void
-  onStandardizeDate: () => void
-  onFillEmpty: (value: string) => void
-  onSelectColumns: (selectedCols: number[]) => void
-  hasData: boolean
-  canMerge: boolean
-  isMerged: boolean
-  headers: string[]
-  canUndo: boolean
+  onImport: () => void;
+  onExport: (format: "xlsx" | "csv") => void;
+  onMerge: () => void;
+  onDeduplicate: (columnIndex?: number) => void;
+  onCleanEmpty: () => void;
+  onTrimWhitespace: () => void;
+  onClear: () => void;
+  onUndo: () => void;
+  onStandardizeDate: () => void;
+  onFillEmpty: (value: string) => void;
+  onSelectColumns: (selectedCols: number[]) => void;
+  hasData: boolean;
+  canMerge: boolean;
+  headers: string[];
+  canUndo: boolean;
+  desktopReady: boolean;
 }
 
 export default function Toolbar({
@@ -36,18 +47,21 @@ export default function Toolbar({
   canMerge,
   headers,
   canUndo,
+  desktopReady,
 }: ToolbarProps) {
-  const [showColPicker, setShowColPicker] = useState(false)
-  const [showFillModal, setShowFillModal] = useState(false)
-  const [fillValue, setFillValue] = useState('0')
-  const [selectedCols, setSelectedCols] = useState<number[]>([])
-  const [dedupCol, setDedupCol] = useState<number>(-1)
+  const [showColPicker, setShowColPicker] = useState(false);
+  const [showFillModal, setShowFillModal] = useState(false);
+  const [fillValue, setFillValue] = useState("0");
+  const [selectedCols, setSelectedCols] = useState<number[]>([]);
+  const [dedupCol, setDedupCol] = useState<number>(-1);
 
   const handleColToggle = (i: number) => {
-    setSelectedCols(prev =>
-      prev.includes(i) ? prev.filter(c => c !== i) : [...prev, i].sort((a, b) => a - b)
-    )
-  }
+    setSelectedCols((prev) =>
+      prev.includes(i)
+        ? prev.filter((c) => c !== i)
+        : [...prev, i].sort((a, b) => a - b),
+    );
+  };
 
   return (
     <>
@@ -55,7 +69,8 @@ export default function Toolbar({
         {/* 导入 */}
         <button
           onClick={onImport}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+          disabled={!desktopReady}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-40"
         >
           <Upload size={15} />
           <span>导入</span>
@@ -65,16 +80,16 @@ export default function Toolbar({
 
         {/* 导出 */}
         <button
-          onClick={() => onExport('xlsx')}
-          disabled={!hasData}
+          onClick={() => onExport("xlsx")}
+          disabled={!hasData || !desktopReady}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm disabled:opacity-40"
         >
           <Download size={15} />
           <span>Excel</span>
         </button>
         <button
-          onClick={() => onExport('csv')}
-          disabled={!hasData}
+          onClick={() => onExport("csv")}
+          disabled={!hasData || !desktopReady}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm disabled:opacity-40"
         >
           <span>CSV</span>
@@ -99,9 +114,9 @@ export default function Toolbar({
           <button
             onClick={() => {
               if (dedupCol === -1) {
-                onDeduplicate()
+                onDeduplicate();
               } else {
-                onDeduplicate(dedupCol)
+                onDeduplicate(dedupCol);
               }
             }}
             disabled={!hasData}
@@ -113,13 +128,15 @@ export default function Toolbar({
           {hasData && (
             <select
               value={dedupCol}
-              onChange={e => setDedupCol(Number(e.target.value))}
+              onChange={(e) => setDedupCol(Number(e.target.value))}
               className="absolute inset-0 opacity-0 cursor-pointer w-full"
               title="选择去重列"
             >
               <option value={-1}>全行去重</option>
               {headers.map((h, i) => (
-                <option key={i} value={i}>{h || `列${i + 1}`}</option>
+                <option key={i} value={i}>
+                  {h || `列${i + 1}`}
+                </option>
               ))}
             </select>
           )}
@@ -201,7 +218,6 @@ export default function Toolbar({
           <Trash2 size={15} />
           <span>清空</span>
         </button>
-
       </div>
 
       {/* 列筛选弹窗 */}
@@ -210,18 +226,32 @@ export default function Toolbar({
           <div className="bg-white rounded-xl shadow-2xl w-96 max-h-[80vh] flex flex-col">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="font-semibold text-gray-800">选择保留的列</h3>
-              <button onClick={() => { setSelectedCols(headers.map((_, i) => i)); setShowColPicker(false); onSelectColumns(headers.map((_, i) => i)); }} className="text-sm text-blue-600 hover:underline">全选并保留</button>
+              <button
+                onClick={() => {
+                  setSelectedCols(headers.map((_, i) => i));
+                  setShowColPicker(false);
+                  onSelectColumns(headers.map((_, i) => i));
+                }}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                全选并保留
+              </button>
             </div>
             <div className="p-4 overflow-y-auto flex-1 space-y-2">
               {headers.map((h, i) => (
-                <label key={i} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                <label
+                  key={i}
+                  className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
+                >
                   <input
                     type="checkbox"
                     checked={selectedCols.includes(i)}
                     onChange={() => handleColToggle(i)}
                     className="w-4 h-4"
                   />
-                  <span className="text-sm text-gray-700">{h || `列${i + 1}`}</span>
+                  <span className="text-sm text-gray-700">
+                    {h || `列${i + 1}`}
+                  </span>
                 </label>
               ))}
             </div>
@@ -234,8 +264,12 @@ export default function Toolbar({
               </button>
               <button
                 onClick={() => {
-                  setShowColPicker(false)
-                  onSelectColumns(selectedCols.length > 0 ? selectedCols : headers.map((_, i) => i))
+                  setShowColPicker(false);
+                  onSelectColumns(
+                    selectedCols.length > 0
+                      ? selectedCols
+                      : headers.map((_, i) => i),
+                  );
                 }}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
               >
@@ -254,14 +288,14 @@ export default function Toolbar({
             <input
               type="text"
               value={fillValue}
-              onChange={e => setFillValue(e.target.value)}
+              onChange={(e) => setFillValue(e.target.value)}
               placeholder="输入填充值，如：0、N/A"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4 outline-none focus:border-blue-500"
               autoFocus
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  setShowFillModal(false)
-                  onFillEmpty(fillValue)
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setShowFillModal(false);
+                  onFillEmpty(fillValue);
                 }
               }}
             />
@@ -274,8 +308,8 @@ export default function Toolbar({
               </button>
               <button
                 onClick={() => {
-                  setShowFillModal(false)
-                  onFillEmpty(fillValue)
+                  setShowFillModal(false);
+                  onFillEmpty(fillValue);
                 }}
                 className="flex-1 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 text-sm"
               >
@@ -286,5 +320,5 @@ export default function Toolbar({
         </div>
       )}
     </>
-  )
+  );
 }
