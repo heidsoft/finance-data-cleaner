@@ -86,7 +86,7 @@ function App() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const showToast = useCallback((message: string, type: ToastMessage["type"] = "success") => {
-    const id = Date.now().toString();
+    const id = crypto.randomUUID();
     setToasts((prev) => [...prev, { id, type, message }]);
   }, []);
 

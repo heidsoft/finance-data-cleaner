@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { CheckCircle, AlertCircle, XCircle, X } from "lucide-react";
 
 export interface ToastMessage {
@@ -23,10 +23,13 @@ export default function Toast({ toasts, onDismiss }: ToastProps) {
 }
 
 function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: string) => void }) {
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
   useEffect(() => {
-    const timer = setTimeout(() => onDismiss(toast.id), 3000);
+    const timer = setTimeout(() => onDismissRef.current(toast.id), 3000);
     return () => clearTimeout(timer);
-  }, [toast.id, onDismiss]);
+  }, [toast.id]);
 
   const icons = {
     success: <CheckCircle size={16} className="text-green-500" />,
