@@ -3,6 +3,7 @@ import Toolbar from './components/Toolbar'
 import FileSidebar from './components/FileSidebar'
 import DataTable from './components/DataTable'
 import StatusBar from './components/StatusBar'
+import MonthlySummary from './components/MonthlySummary'
 import { FileData, processFile, exportToExcel, exportToCSV } from './utils/excel'
 
 interface HistoryState {
@@ -18,7 +19,7 @@ interface SKUMapping {
   price: number
 }
 
-type Tab = 'data' | 'mapping' | 'reconcile' | 'bill' | 'rebate'
+type Tab = 'data' | 'mapping' | 'reconcile' | 'bill' | 'rebate' | 'monthly'
 
 interface BillRecord {
   fileName: string
@@ -653,6 +654,7 @@ function App() {
           { key: 'reconcile', label: '🧾 收款对账' },
           { key: 'bill', label: '📄 账单对账' },
           { key: 'rebate', label: '💰 品牌返利' },
+          { key: 'monthly', label: '📅 月度汇总' },
         ].map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key as Tab)}
             className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.key ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'text-gray-600 hover:bg-gray-100'}`}>
@@ -995,6 +997,11 @@ function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ========== 月度汇总Tab ========== */}
+      {activeTab === 'monthly' && (
+        <MonthlySummary billRecords={billRecords} onImportBill={handleImportBill} />
       )}
 
       {/* ========== 数据处理Tab ========== */}
