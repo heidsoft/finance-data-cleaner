@@ -153,7 +153,7 @@ export interface MergePreviewResult {
 export function smartMergeHeaders(files: { headers: string[]; data: any[][]; name: string }[]): MergePreviewResult {
   const columnMap = new Map<string, { sources: string[]; sourceIndices: number[] }>();
 
-  files.forEach((file, fileIdx) => {
+  files.forEach((file) => {
     file.headers.forEach((col, colIdx) => {
       const key = col.trim();
       if (!columnMap.has(key)) {
@@ -197,8 +197,14 @@ export function executeSmartMerge(
     const fileRows = file.data.slice(1);
     fileRows.forEach(row => {
       const newRow = columnInfo.map(col => {
-        const sourceIdx = col.sourceIndices[col.sources.indexOf(file.name)];
-        return sourceIdx !== undefined ? row[sourceIdx] : "";
+        let sourceIdx = -1;
+        for (let i = 0; i < col.sources.length; i++) {
+          if (col.sources[i] === file.name) {
+            sourceIdx = col.sourceIndices[i];
+            break;
+          }
+        }
+        return sourceIdx >= 0 ? row[sourceIdx] : "";
       });
       merged.push(newRow);
     });

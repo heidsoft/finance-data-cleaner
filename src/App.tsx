@@ -236,6 +236,7 @@ function App() {
 
   const handleConfirmMerge = useCallback(() => {
     if (!mergePreview || files.length < 2) return;
+    const totalRows = mergePreview.totalRows;
     const merged = executeSmartMerge(files, mergePreview.columnInfo);
     setMergedData(merged);
     setCurrentHeaders(mergePreview.unifiedHeaders);
@@ -244,7 +245,7 @@ function App() {
     saveHistory(merged, mergePreview.unifiedHeaders);
     computeStats(files);
     setMergePreview(null);
-    showToast(`合并完成：${files.length} 个文件，${mergePreview.totalRows} 行数据`, "success");
+    showToast(`合并完成：${files.length} 个文件，${totalRows} 行数据`, "success");
   }, [mergePreview, files, saveHistory, computeStats, showToast]);
 
   const handleDeduplicate = useCallback(
