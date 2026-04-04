@@ -8,6 +8,30 @@ export interface FileData {
   data: any[][]
 }
 
+function detectAndDecodeBuffer(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer)
+  // Try UTF-8 first
+  try {
+    const utf8Decoder = new TextDecoder('utf-8', { fatal: true })
+    utf8Decoder.decode(bytes)
+    return new TextDecoder('utf-8').decode(bytes)
+  } catch {
+    // Try GBK (common for Chinese Excel exports)
+    try {
+      const gbkDecoder = new TextDecoder('gbk', { fatal: true })
+      gbkDecoder.decode(bytes)
+      return new TextDecoder('gbk').decode(bytes)
+    } catch {
+      // Fallback: try GB18030 (more complete Chinese encoding)
+      return new TextDecoder('gb18030').decode(bytes)
+    }
+  }
+}
+
+function isCSV(filePath: string): boolean {
+  return /\.(csv|CSV)$/.test(filePath)
+}
+
 export async function processFile(filePath: string): Promise<FileData | null> {
   try {
     const result = await readLocalFile(filePath)
@@ -15,12 +39,22 @@ export async function processFile(filePath: string): Promise<FileData | null> {
       console.error('读取文件失败:', result.error)
       return null
     }
-    
-    const workbook = XLSX.read(result.buffer, { type: 'array' })
-    
-    const sheetName = workbook.SheetNames[0]
-    const worksheet = workbook.Sheets[sheetName]
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][]
+
+    let jsonData: any[][]
+    if (isCSV(filePath)) {
+      // CSV files: decode with encoding detection, then parse
+      const content = detectAndDecodeBuffer(result.buffer)
+      const workbook = XLSX.read(content, { type: 'string' })
+      const sheetName = workbook.SheetNames[0]
+      const worksheet = workbook.Sheets[sheetName]
+      jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][]
+    } else {
+      // Excel files: read binary directly
+      const workbook = XLSX.read(result.buffer, { type: 'array' })
+      const sheetName = workbook.SheetNames[0]
+      const worksheet = workbook.Sheets[sheetName]
+      jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][]
+    }
     
     if (jsonData.length === 0) {
       return null
