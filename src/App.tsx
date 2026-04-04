@@ -594,6 +594,70 @@ function App() {
     [currentData, handleSelectColumns],
   );
 
+  // Combined one-click clean transformation (applies all ops to same data, single state update)
+  const applyOneClickClean = useCallback((data: any[]) => {
+    if (data.length === 0) return;
+    const headers = data[0];
+    let dataRows = data.slice(1);
+
+    // 1. Trim whitespace
+    dataRows = dataRows.map(row =>
+      row.map(cell => (typeof cell === 'string' ? cell.trim() : cell))
+    );
+
+    // 2. Remove empty rows
+    dataRows = dataRows.filter(row =>
+      row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '')
+    );
+
+    // 3. Standardize dates
+    dataRows = dataRows.map(row =>
+      row.map(cell => {
+        if (typeof cell !== 'string') return cell;
+        const trimmed = cell.trim();
+        const patterns = [
+          { regex: /^(\d{4})[年/-](\d{1,2})[月/-](\d{1,2})日?$/ },
+          { regex: /^(\d{1,2})[月/-](\d{1,2})[日/-](\d{4})$/ },
+          { regex: /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/ },
+          { regex: /^(\d{4})(\d{2})(\d{2})$/ },
+        ];
+        for (const p of patterns) {
+          const match = trimmed.match(p.regex as any);
+          if (match) {
+            try {
+              let y = '', m = '', d = '';
+              if (match[1].length === 4) {
+                y = match[1];
+                m = match[2].padStart(2, '0');
+                d = match[3].padStart(2, '0');
+              } else {
+                y = match[3];
+                m = match[1].padStart(2, '0');
+                d = match[2].padStart(2, '0');
+              }
+              const date = new Date(`${y}-${m}-${d}`);
+              if (!isNaN(date.getTime()))
+                return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            } catch {}
+          }
+        }
+        return cell;
+      })
+    );
+
+    const newData = [headers, ...dataRows];
+    setCurrentData(newData);
+    setCurrentHeaders(headers);
+    if (selectedFileIndex !== null && !isMerged) {
+      const newFiles = [...files];
+      newFiles[selectedFileIndex] = { ...files[selectedFileIndex], data: newData, headers };
+      setFiles(newFiles);
+    } else if (isMerged) {
+      setMergedData(newData);
+    }
+    saveHistory(newData, headers);
+  }, [selectedFileIndex, isMerged, files, saveHistory]);
+
   const handleOneClickCleanWithConfirm = useCallback(() => {
     if (currentData.length === 0) return;
     const dataRows = currentData.slice(1);
@@ -607,15 +671,13 @@ function App() {
       message: `将执行以下操作：\n1. 去除所有单元格的前后空格\n2. 删除 ${removedRows} 行空行\n3. 将日期格式统一为 YYYY-MM-DD`,
       onConfirm: () => {
         setConfirmDialog(prev => prev ? { ...prev, disabled: true } : null);
-        handleTrimWhitespace();
-        handleCleanEmpty();
-        handleStandardizeDate();
+        applyOneClickClean(currentData);
         setConfirmDialog(null);
         showToast("一键清洗完成", "success");
       },
       confirmClassName: "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600",
     });
-  }, [currentData, handleTrimWhitespace, handleCleanEmpty, handleStandardizeDate]);
+  }, [currentData, applyOneClickClean, showToast]);
 
   // SKU映射
   const handleImportMapping = useCallback(async () => {
