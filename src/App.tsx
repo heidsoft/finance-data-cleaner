@@ -3,6 +3,7 @@ import Toolbar from "./components/Toolbar";
 import FileSidebar from "./components/FileSidebar";
 import DataTable from "./components/DataTable";
 import StatusBar from "./components/StatusBar";
+import Toast, { ToastMessage } from "./components/Toast";
 import MonthlySummary from "./components/MonthlySummary";
 import {
   FileData,
@@ -80,6 +81,18 @@ function App() {
       ? null
       : "当前为浏览器预览模式，可查看界面但无法直接进行本地文件导入导出，请使用桌面应用运行。",
   );
+
+  // Toast 通知
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const showToast = useCallback((message: string, type: ToastMessage["type"] = "success") => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, type, message }]);
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   // 佣金计提
   const [accrualData, setAccrualData] = useState<any[][]>([]);
@@ -1643,6 +1656,7 @@ function App() {
           </div>
         </div>
       )}
+      <Toast toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
