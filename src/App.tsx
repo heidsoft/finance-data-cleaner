@@ -93,6 +93,7 @@ function App() {
     onConfirm: () => void;
     confirmLabel?: string;
     confirmClassName?: string;
+    disabled?: boolean;
   } | null>(null);
 
   const showToast = useCallback((message: string, type: ToastMessage["type"] = "success") => {
@@ -452,6 +453,7 @@ function App() {
             ? `将删除 ${removed} 行重复数据，保留 ${dataRows.length - removed} 行。`
             : "没有发现重复行，无需去重。",
         onConfirm: () => {
+          setConfirmDialog((prev) => prev ? { ...prev, disabled: true } : null);
           handleDeduplicate(columnIndex);
           setConfirmDialog(null);
           if (removed > 0) {
@@ -482,6 +484,7 @@ function App() {
           ? `将删除 ${removed} 行空行/空列，保留 ${nonEmptyRows.length} 行。`
           : "没有发现空行空列，无需清空。",
       onConfirm: () => {
+        setConfirmDialog((prev) => prev ? { ...prev, disabled: true } : null);
         handleCleanEmpty();
         setConfirmDialog(null);
         if (removed > 0) {
@@ -499,6 +502,7 @@ function App() {
       title: "确认 Trim",
       message: "去除所有单元格的首尾空格。",
       onConfirm: () => {
+        setConfirmDialog((prev) => prev ? { ...prev, disabled: true } : null);
         handleTrimWhitespace();
         setConfirmDialog(null);
         showToast("Trim 完成", "success");
@@ -513,6 +517,7 @@ function App() {
       title: "确认日期格式规范化",
       message: "将各种日期格式统一为 YYYY-MM-DD。",
       onConfirm: () => {
+        setConfirmDialog((prev) => prev ? { ...prev, disabled: true } : null);
         handleStandardizeDate();
         setConfirmDialog(null);
         showToast("日期格式规范化完成", "success");
@@ -528,6 +533,7 @@ function App() {
         title: "确认填充空值",
         message: `将使用 "${value}" 填充所有空单元格。`,
         onConfirm: () => {
+          setConfirmDialog((prev) => prev ? { ...prev, disabled: true } : null);
           handleFillEmpty(value);
           setConfirmDialog(null);
           showToast(`已使用 "${value}" 填充空值`, "success");
@@ -552,6 +558,7 @@ function App() {
             ? `将保留 ${newColCount} 列，删除 ${removed} 列。`
             : `将保留全部 ${newColCount} 列。`,
         onConfirm: () => {
+          setConfirmDialog((prev) => prev ? { ...prev, disabled: true } : null);
           handleSelectColumns(selectedCols);
           setConfirmDialog(null);
           if (removed > 0) {
@@ -1809,6 +1816,7 @@ function App() {
         message={confirmDialog?.message || ""}
         confirmLabel={confirmDialog?.confirmLabel}
         confirmClassName={confirmDialog?.confirmClassName}
+        disabled={confirmDialog?.disabled}
         onConfirm={confirmDialog?.onConfirm || (() => {})}
         onCancel={() => setConfirmDialog(null)}
       />
