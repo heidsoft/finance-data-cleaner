@@ -23,7 +23,10 @@ export default defineConfig({
           build: {
             outDir: 'dist-electron',
             rollupOptions: {
-              external: ['electron']
+              external: ['electron'],
+              output: {
+                entryFileNames: '[name].cjs'
+              }
             }
           }
         }
@@ -35,7 +38,12 @@ export default defineConfig({
         },
         vite: {
           build: {
-            outDir: 'dist-electron'
+            outDir: 'dist-electron',
+            rollupOptions: {
+              output: {
+                entryFileNames: '[name].cjs'
+              }
+            }
           }
         }
       }

@@ -56,7 +56,7 @@ function App() {
   const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(null)
   const [currentData, setCurrentData] = useState<any[][]>([])
   const [currentHeaders, setCurrentHeaders] = useState<string[]>([])
-  const [mergedData, setMergedData] = useState<any[][] | null>(null)
+  const [_mergedData, setMergedData] = useState<any[][] | null>(null)
   const [isMerged, setIsMerged] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [history, setHistory] = useState<HistoryState[]>([])
@@ -74,7 +74,7 @@ function App() {
   } | null>(null)
 
   // 退款相关
-  const [refundFile, setRefundFile] = useState<FileData | null>(null)
+  const [_refundFile, setRefundFile] = useState<FileData | null>(null)
   const [refundRecords, setRefundRecords] = useState<RefundOrder[]>([])
   const [refundLossData, setRefundLossData] = useState<any[][]>([])
 
@@ -580,16 +580,7 @@ function App() {
     const gmvWan = gmvYuan / 10000
     const tiers = customTiers.length > 0 ? customTiers : rebateTiers
     const { totalRebate, details } = calculateRebate(gmvWan, tiers)
-    const brand = rebateBrand || '品牌'
     const headers = ['阶梯区间', '区间范围(万)', '返利比例', '适用GMV(万)', '返利金额(万)']
-    const summary = [
-      [brand, `GMV合计: ¥${gmvYuan.toLocaleString()} (${gmvWan.toFixed(2)}万)`],
-      ['适用阶梯返利规则', tiers.map(t => `${t.label}: ${t.rate}%`).join(' | ')],
-      ['计算结果', ''],
-      ...details,
-      ['返利合计', '', '', '', `${totalRebate.toFixed(4)}万`],
-      ['折合人民币', '', '', '', `约 ¥${(totalRebate * 10000).toFixed(2)}`],
-    ]
     const data = [headers, ...details, ['', '', '', '返利合计(万)', totalRebate.toFixed(4)], ['', '', '', '折合人民币', `¥${(totalRebate * 10000).toFixed(2)}`]]
     setRebateResult(data)
     setCurrentData(data)
@@ -639,9 +630,6 @@ function App() {
     '快手电商': 'bg-purple-100 text-purple-700', '拼多多': 'bg-yellow-100 text-yellow-700',
   }
   const color = (p: string) => platformColor[p] || 'bg-gray-100 text-gray-700'
-
-  const currentData_ref = currentData
-  const currentHeaders_ref = currentHeaders
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">

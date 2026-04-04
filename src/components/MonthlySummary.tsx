@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
-import DataTable from './DataTable'
-import { FileData, processFile, exportToExcel, exportToCSV } from '../utils/excel'
+import { exportToExcel } from '../utils/excel'
 
 interface PlatformSummary {
   platform: string
@@ -12,17 +11,6 @@ interface PlatformSummary {
   refundAmount: number
   refundCount: number
   refundLoss: number
-  netAmount: number
-}
-
-interface MonthlyRecord {
-  month: string  // YYYY-MM
-  platform: string
-  gmv: number
-  orderCount: number
-  commission: number
-  techFee: number
-  subsidy: number
   netAmount: number
 }
 

@@ -50,7 +50,7 @@ export async function exportToExcel(data: any[][], filePath: string): Promise<vo
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, worksheet, '数据')
   const output = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-  await window.electronAPI.writeFile(filePath, new Uint8Array(output))
+  await window.electronAPI.writeFile(filePath, output.buffer)
 }
 
 export async function exportToCSV(data: any[][], filePath: string): Promise<void> {

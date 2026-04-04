@@ -1,8 +1,9 @@
 {
   "name": "finance-data-cleaner",
   "version": "1.0.0",
+  "type": "module",
   "description": "财务数据清洗工具 - CSV/Excel处理、去重、合并",
-  "main": "dist-electron/main.js",
+  "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build && electron-builder",

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Upload, Download, Merge, Trash2, Scissors, Eraser, Undo2, Calendar, Search, Columns, Pill } from 'lucide-react'
+import { Upload, Download, Merge, Trash2, Scissors, Eraser, Undo2, Calendar, Columns, Pill } from 'lucide-react'
 
 interface ToolbarProps {
   onImport: () => void
@@ -34,7 +34,6 @@ export default function Toolbar({
   onSelectColumns,
   hasData,
   canMerge,
-  isMerged,
   headers,
   canUndo,
 }: ToolbarProps) {
@@ -48,14 +47,6 @@ export default function Toolbar({
     setSelectedCols(prev =>
       prev.includes(i) ? prev.filter(c => c !== i) : [...prev, i].sort((a, b) => a - b)
     )
-  }
-
-  const handleSelectAllCols = () => {
-    if (selectedCols.length === headers.length) {
-      setSelectedCols([])
-    } else {
-      setSelectedCols(headers.map((_, i) => i))
-    }
   }
 
   return (
@@ -211,20 +202,6 @@ export default function Toolbar({
           <span>清空</span>
         </button>
 
-        {/* 搜索框 */}
-        <div className="flex items-center gap-1 border border-gray-300 rounded-lg px-2 py-1.5 bg-gray-50">
-          <Search size={14} className="text-gray-400" />
-          <input
-            type="text"
-            placeholder="搜索数据..."
-            value={searchText}
-            onChange={e => onSearchChange(e.target.value)}
-            className="border-none outline-none bg-transparent text-sm w-36"
-          />
-          {searchText && (
-            <button onClick={() => onSearchChange('')} className="text-gray-400 hover:text-gray-600 text-xs">✕</button>
-          )}
-        </div>
       </div>
 
       {/* 列筛选弹窗 */}
