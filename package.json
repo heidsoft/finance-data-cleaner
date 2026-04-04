@@ -50,6 +50,21 @@
       "category": "public.app-category.productivity",
       "sign": false
     },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "public/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerLanguages": ["zh_CN"],
+      "language": 2052
+    },
     "files": [
       "dist/**/*",
       "dist-electron/**/*"
