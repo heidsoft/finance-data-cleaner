@@ -343,3 +343,60 @@ export function generateAccrualTable(billRecords: BillRecord[]): any[][] {
 
   return [headers, ...rows, totalRow];
 }
+
+export interface RefundLossResult {
+  orderId: string;
+  platform: string;
+  refundAmount: number;
+  refundDate: string;
+  commission: number;
+  isMatched: boolean;
+  matchSource: "精确匹配" | "均摊估算";
+}
+
+export function calculateRefundLossWithMatching(
+  refundRecords: RefundOrder[],
+  commissionDetails: CommissionDetail[],
+  avgCommissionRate: number
+): { results: RefundLossResult[]; matchedCount: number; totalCount: number } {
+  // Build lookup map for O(n) matching: key = "orderId|platform"
+  const commissionMap = new Map<string, number>();
+  for (const cd of commissionDetails) {
+    const key = `${cd.orderId}|${cd.platform}`;
+    commissionMap.set(key, cd.commission);
+  }
+
+  const results: RefundLossResult[] = [];
+  let matchedCount = 0;
+
+  for (const refund of refundRecords) {
+    const key = `${refund.orderId}|${refund.platform}`;
+    const matchedCommission = commissionMap.get(key);
+
+    if (matchedCommission !== undefined) {
+      results.push({
+        orderId: refund.orderId,
+        platform: refund.platform,
+        refundAmount: refund.refundAmount,
+        refundDate: refund.refundDate,
+        commission: matchedCommission,
+        isMatched: true,
+        matchSource: "精确匹配",
+      });
+      matchedCount++;
+    } else {
+      // Fallback to average rate estimation
+      results.push({
+        orderId: refund.orderId,
+        platform: refund.platform,
+        refundAmount: refund.refundAmount,
+        refundDate: refund.refundDate,
+        commission: refund.refundAmount * avgCommissionRate,
+        isMatched: false,
+        matchSource: "均摊估算",
+      });
+    }
+  }
+
+  return { results, matchedCount, totalCount: refundRecords.length };
+}
