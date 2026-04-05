@@ -29,6 +29,12 @@ export interface RefundOrder {
   originalOrder?: string;
 }
 
+export interface CommissionDetail {
+  orderId: string;
+  platform: string;
+  commission: number;
+}
+
 export interface SKUMapping {
   platformName: string;
   internalCode: string;
