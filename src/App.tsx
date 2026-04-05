@@ -793,6 +793,33 @@ function App() {
     }
   }, [reportError]);
 
+  // 佣金明细导入
+  const handleImportCommissionDetails = useCallback(async () => {
+    try {
+      const result = await openDataFiles();
+      if (!result.canceled && result.filePaths.length > 0) {
+        const fileData = await processFile(result.filePaths[0]);
+        if (fileData) {
+          const details = parseCommissionDetails(fileData);
+          if (details.length === 0) {
+            setToasts((prev) => [
+              ...prev,
+              { type: "error", message: "未找到佣金数据，请检查文件格式" },
+            ]);
+            return;
+          }
+          setCommissionDetails(details);
+          setToasts((prev) => [
+            ...prev,
+            { type: "success", message: `已导入 ${details.length} 条佣金明细` },
+          ]);
+        }
+      }
+    } catch (error) {
+      reportError("导入佣金明细", error);
+    }
+  }, [reportError]);
+
   // 佣金计提
   const handleGenerateAccrual = useCallback(() => {
     if (billRecords.length === 0) return;
