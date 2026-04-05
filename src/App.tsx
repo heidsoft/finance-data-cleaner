@@ -1504,6 +1504,11 @@ function App() {
                     </h2>
                     <p className="text-xs text-gray-500 mt-0.5">
                       根据账单自动生成佣金/扣点计提数据
+                      {commissionDetails.length > 0 && (
+                        <span className="ml-2 text-green-600">
+                          ✓ 已导入 {commissionDetails.length} 条佣金明细
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -1512,6 +1517,13 @@ function App() {
                       className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
                     >
                       🔄 重新生成
+                    </button>
+                    <button
+                      onClick={handleImportCommissionDetails}
+                      disabled={!desktopReady}
+                      className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm disabled:opacity-40"
+                    >
+                      📋 导入佣金明细
                     </button>
                     {accrualData.length > 0 && (
                       <button
