@@ -33,10 +33,13 @@ import {
   RebateTier,
   RefundOrder,
   SKUMapping,
+  CommissionDetail,
   detectPlatform,
   findAmount,
   findCol,
   parseBill,
+  parseCommissionDetails,
+  calculateRefundLossWithMatching,
 } from "./services/businessLogic";
 
 type Tab = "data" | "mapping" | "reconcile" | "bill" | "rebate" | "monthly";
@@ -71,6 +74,7 @@ function App() {
   const [_refundFile, setRefundFile] = useState<FileData | null>(null);
   const [refundRecords, setRefundRecords] = useState<RefundOrder[]>([]);
   const [refundLossData, setRefundLossData] = useState<any[][]>([]);
+  const [commissionDetails, setCommissionDetails] = useState<CommissionDetail[]>([]);
 
   // 返利相关
   const [rebateTiers] = useState<RebateTier[]>([
