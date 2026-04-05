@@ -1654,6 +1654,16 @@ function App() {
                         </strong>
                       </span>
                     </div>
+                    {commissionDetails.length > 0 && refundRecords.length > 0 && (
+                      <div className="bg-orange-50 px-3 py-1.5 rounded text-xs">
+                        💡 已匹配 {commissionDetails.length} 条佣金明细，将用于精确计算
+                      </div>
+                    )}
+                    {commissionDetails.length === 0 && refundRecords.length > 0 && (
+                      <div className="bg-gray-100 px-3 py-1.5 rounded text-xs text-gray-600">
+                        ⚠️ 未导入佣金明细，使用均摊估算
+                      </div>
+                    )}
                     <div className="flex gap-3">
                       <button
                         onClick={handleGenerateRefundLoss}
