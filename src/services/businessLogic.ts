@@ -143,6 +143,35 @@ export function parseBill(fileData: FileData): BillRecord {
   };
 }
 
+export function parseCommissionDetails(fileData: FileData): CommissionDetail[] {
+  const headers = fileData.headers;
+  const rows = fileData.data.slice(1);
+
+  const orderIdCol = findCol(headers, ["订单号", "order", "编号", "id", "order_id"]);
+  const platformCol = findCol(headers, ["平台", "platform", "渠道", "source"]);
+  const commissionCol = findCol(headers, ["佣金", "commission", "服务费", "扣点", "platform_fee"]);
+
+  if (commissionCol < 0) {
+    return [];
+  }
+
+  const details: CommissionDetail[] = [];
+
+  for (const row of rows) {
+    const orderId = orderIdCol >= 0 ? String(row[orderIdCol] || "").trim() : "";
+    const platform = platformCol >= 0
+      ? String(row[platformCol] || "").trim()
+      : detectPlatform(fileData.name);
+    const commission = Math.abs(findAmount([row[commissionCol]]));
+
+    if (commission > 0) {
+      details.push({ orderId, platform, commission });
+    }
+  }
+
+  return details;
+}
+
 export function calculateRebate(gmvWan: number, tiers: RebateTier[]) {
   let remaining = gmvWan;
   let totalRebate = 0;
