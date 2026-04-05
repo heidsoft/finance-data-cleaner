@@ -1595,7 +1595,9 @@ function App() {
                     🔴 退款损失还原
                   </h2>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    导入退款订单，还原因退款产生的佣金损失（平台不退佣金）
+                    {commissionDetails.length > 0
+                      ? "已导入佣金明细，可精确计算退款损失"
+                      : "导入佣金明细文件后可精确计算损失，否则使用估算"}
                   </p>
                 </div>
                 <button
