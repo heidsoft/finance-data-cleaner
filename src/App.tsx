@@ -932,52 +932,71 @@ function App() {
 
   const handleGenerateRefundLoss = useCallback(() => {
     if (refundRecords.length === 0) return;
-    const avgCommRate =
+
+    const avgCommissionRate =
       billRecords.length > 0
         ? billRecords.reduce((s, b) => s + b.commission, 0) /
-          Math.max(
-            1,
-            billRecords.reduce((s, b) => s + b.totalAmount, 0),
-          )
+          Math.max(1, billRecords.reduce((s, b) => s + b.totalAmount, 0))
         : 0.05;
+
+    const { results, matchedCount, totalCount } = calculateRefundLossWithMatching(
+      refundRecords,
+      commissionDetails,
+      avgCommissionRate
+    );
+
+    const matchedAmount = results
+      .filter((r) => r.isMatched)
+      .reduce((s, r) => s + r.commission, 0);
+    const estimatedAmount = results
+      .filter((r) => !r.isMatched)
+      .reduce((s, r) => s + r.commission, 0);
+
     const headers = [
       "平台",
       "退款日期",
       "订单号",
       "退款金额",
-      "预估佣金损失",
-      "实际损失合计",
+      "实际佣金",
+      "匹配状态",
+      "佣金来源",
+      "损失合计",
       "说明",
     ];
-    const rows = refundRecords.map((r) => {
-      const commLost = r.refundAmount * avgCommRate;
-      return [
-        r.platform,
-        r.refundDate,
-        r.orderId,
-        r.refundAmount.toFixed(2),
-        commLost.toFixed(2),
-        (r.refundAmount + commLost).toFixed(2),
-        "退款+佣金双重损失",
-      ];
-    });
+
+    const rows = results.map((r) => [
+      r.platform,
+      r.refundDate,
+      r.orderId,
+      r.refundAmount.toFixed(2),
+      r.commission.toFixed(2),
+      r.isMatched ? "✅已匹配" : "⚠️估算",
+      r.matchSource,
+      (r.refundAmount + r.commission).toFixed(2),
+      r.isMatched ? "退款+佣金双重损失" : "退款+估算佣金损失",
+    ]);
+
     const totalRefund = refundRecords.reduce((s, r) => s + r.refundAmount, 0);
-    const totalComm = totalRefund * avgCommRate;
+    const totalComm = results.reduce((s, r) => s + r.commission, 0);
+
     const totalRow = [
       "合计",
       "",
-      "",
+      `${matchedCount}/${totalCount} 笔已匹配`,
       totalRefund.toFixed(2),
       totalComm.toFixed(2),
+      matchedCount === totalCount ? "✅100%匹配" : `⚠️${totalCount - matchedCount}笔估算`,
+      matchedCount > 0 ? `精确¥${matchedAmount.toFixed(2)}/估算¥${estimatedAmount.toFixed(2)}` : "全部估算",
       (totalRefund + totalComm).toFixed(2),
       `涉及 ${refundRecords.length} 笔退款`,
     ];
+
     const data = [headers, ...rows, totalRow];
     setRefundLossData(data);
     setCurrentData(data);
     setCurrentHeaders(headers);
     saveHistory(data, headers);
-  }, [refundRecords, billRecords, saveHistory]);
+  }, [refundRecords, commissionDetails, billRecords, saveHistory]);
 
   const handleExportRefundLoss = useCallback(async () => {
     if (refundLossData.length === 0) return;
